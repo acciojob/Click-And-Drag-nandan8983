@@ -62,17 +62,15 @@ class DraggableCubes {
                 this.currentCube = e.target;
                 this.currentCube.classList.add('dragging');
                 
-                // Get mouse position
-                this.startX = e.clientX;
-                this.startY = e.clientY;
+                // Get mouse position relative to page
+                this.startX = e.pageX || e.clientX;
+                this.startY = e.pageY || e.clientY;
                 
-                // Get cube's current position
+                // Get cube's current position relative to container
                 const cubeRect = this.currentCube.getBoundingClientRect();
+                this.updateContainerRect();
                 this.initialX = cubeRect.left - this.containerRect.left;
                 this.initialY = cubeRect.top - this.containerRect.top;
-                
-                // Update container rect in case it changed
-                this.updateContainerRect();
             }
 
             handleMouseMove(e) {
@@ -80,9 +78,13 @@ class DraggableCubes {
                 
                 e.preventDefault();
                 
-                // Calculate movement
-                const deltaX = e.clientX - this.startX;
-                const deltaY = e.clientY - this.startY;
+                // Get current mouse position
+                const currentX = e.pageX || e.clientX;
+                const currentY = e.pageY || e.clientY;
+                
+                // Calculate movement delta
+                const deltaX = currentX - this.startX;
+                const deltaY = currentY - this.startY;
                 
                 // Calculate new position
                 let newX = this.initialX + deltaX;
