@@ -1,30 +1,129 @@
 // Your code here.
-const slider = document.querySelector('.items');
-let isDown = false;
-let startX;
-let scrollLeft;
+class DraggableCubes {
+            constructor() {
+                this.container = document.getElementById('container');
+                this.cubes = document.querySelectorAll('.cube');
+                this.isDragging = false;
+                this.currentCube = null;
+                this.startX = 0;
+                this.startY = 0;
+                this.initialX = 0;
+                this.initialY = 0;
+                this.containerRect = null;
+                
+                this.init();
+            }
 
-slider.addEventListener('mousedown', (e) => {
-  isDown = true;
-  slider.classList.add('active');
-  startX = e.pageX - slider.offsetLeft;
-  scrollLeft = slider.scrollLeft;
-});
+            init() {
+                // Set initial positions in a grid
+                this.setInitialPositions();
+                
+                // Add event listeners to each cube
+                this.cubes.forEach(cube => {
+                    cube.addEventListener('mousedown', this.handleMouseDown.bind(this));
+                });
 
-slider.addEventListener('mouseleave', () => {
-  isDown = false;
-  slider.classList.remove('active');
-});
+                // Add global event listeners
+                document.addEventListener('mousemove', this.handleMouseMove.bind(this));
+                document.addEventListener('mouseup', this.handleMouseUp.bind(this));
+                
+                // Update container rect on resize
+                window.addEventListener('resize', this.updateContainerRect.bind(this));
+                this.updateContainerRect();
+            }
 
-slider.addEventListener('mouseup', () => {
-  isDown = false;
-  slider.classList.remove('active');
-});
+            setInitialPositions() {
+                const cubesPerRow = 4;
+                const cubeSize = 60;
+                const spacing = 20;
+                const startX = 50;
+                const startY = 80;
 
-slider.addEventListener('mousemove', (e) => {
-  if (!isDown) return;
-  e.preventDefault();
-  const x = e.pageX - slider.offsetLeft;
-  const walk = (x - startX) * 1.5;
-  slider.scrollLeft = scrollLeft - walk;
-});
+                this.cubes.forEach((cube, index) => {
+                    const row = Math.floor(index / cubesPerRow);
+                    const col = index % cubesPerRow;
+                    
+                    const x = startX + col * (cubeSize + spacing);
+                    const y = startY + row * (cubeSize + spacing);
+                    
+                    cube.style.left = x + 'px';
+                    cube.style.top = y + 'px';
+                });
+            }
+
+            updateContainerRect() {
+                this.containerRect = this.container.getBoundingClientRect();
+            }
+
+            handleMouseDown(e) {
+                e.preventDefault();
+                
+                this.isDragging = true;
+                this.currentCube = e.target;
+                this.currentCube.classList.add('dragging');
+                
+                // Get mouse position
+                this.startX = e.clientX;
+                this.startY = e.clientY;
+                
+                // Get cube's current position
+                const cubeRect = this.currentCube.getBoundingClientRect();
+                this.initialX = cubeRect.left - this.containerRect.left;
+                this.initialY = cubeRect.top - this.containerRect.top;
+                
+                // Update container rect in case it changed
+                this.updateContainerRect();
+            }
+
+            handleMouseMove(e) {
+                if (!this.isDragging || !this.currentCube) return;
+                
+                e.preventDefault();
+                
+                // Calculate movement
+                const deltaX = e.clientX - this.startX;
+                const deltaY = e.clientY - this.startY;
+                
+                // Calculate new position
+                let newX = this.initialX + deltaX;
+                let newY = this.initialY + deltaY;
+                
+                // Apply boundary constraints
+                const cubeSize = 60;
+                const containerWidth = this.container.clientWidth;
+                const containerHeight = this.container.clientHeight;
+                
+                // Constrain to container boundaries
+                newX = Math.max(0, Math.min(newX, containerWidth - cubeSize));
+                newY = Math.max(0, Math.min(newY, containerHeight - cubeSize));
+                
+                // Update cube position
+                this.currentCube.style.left = newX + 'px';
+                this.currentCube.style.top = newY + 'px';
+            }
+
+            handleMouseUp(e) {
+                if (!this.isDragging || !this.currentCube) return;
+                
+                this.isDragging = false;
+                this.currentCube.classList.remove('dragging');
+                this.currentCube = null;
+            }
+
+            reset() {
+                this.setInitialPositions();
+            }
+        }
+
+        // Initialize the draggable cubes system
+        const draggableCubes = new DraggableCubes();
+
+        // Reset function for the button
+        function resetCubes() {
+            draggableCubes.reset();
+        }
+
+        // Prevent default drag behavior on images and other elements
+        document.addEventListener('dragstart', (e) => {
+            e.preventDefault();
+        });
